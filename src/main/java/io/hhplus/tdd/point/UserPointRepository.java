@@ -7,10 +7,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class UserPointRepository {
-    private UserPointTable userPointTable;
+    private final UserPointTable userPointTable;
 
     public UserPoint selectById(long id) {
         return userPointTable.selectById(id);
+    }
+
+    public UserPoint chargePointById(long id, long amount) {
+        return userPointTable.insertOrUpdate(id, amount);
     }
 
 

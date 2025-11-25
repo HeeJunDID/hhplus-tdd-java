@@ -10,8 +10,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PointHistoryRepository {
 
-    private PointHistoryTable pointHistoryTable;
+    private final PointHistoryTable pointHistoryTable;
     public List<PointHistory> selectAllByUserId(long id) {
         return pointHistoryTable.selectAllByUserId(id);
+    }
+
+    public PointHistory insertPointHistory(long userId, long amount, TransactionType type, long updateMillis) {
+        return pointHistoryTable.insert(userId, amount, type, updateMillis);
     }
 }

@@ -12,19 +12,26 @@ import java.time.Instant;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class PointServiceTest {
 
-    @InjectMocks
-    PointService pointService = new PointServiceImpl();
-    @InjectMocks
-    PointHistoryService pointHistoryService = new PointHistoryServiceImpl();
     @Mock
     UserPointRepository userPointRepository;
+
     @Mock
     PointHistoryRepository pointHistoryRepository;
+
+//    @InjectMocks
+//    PointHistoryService pointHistoryService;
+
+    @InjectMocks
+    PointService pointService;
 
     @Test
     @DisplayName("Red:존재하지 않는 고객으로 포인트 조회")
@@ -74,7 +81,7 @@ public class PointServiceTest {
         given(pointHistoryRepository.selectAllByUserId(id)).willReturn(emptyPointHistoryList);
 
         //when
-        List<PointHistory> pointHistoryList = pointHistoryService.getPointHistory(id);
+        List<PointHistory> pointHistoryList = pointService.getPointHistory(id);
 
         //then
         assertThat(pointHistoryList).isEqualTo(emptyPointHistoryList);
@@ -91,7 +98,7 @@ public class PointServiceTest {
                 );
         given(pointHistoryRepository.selectAllByUserId(id)).willReturn(pointHistoryList);
         //when
-        List<PointHistory> result = pointHistoryService.getPointHistory(id);
+        List<PointHistory> result = pointService.getPointHistory(id);
         //then
         assertThat(result).isEqualTo(pointHistoryList);
         assertThat(result.get(0).userId()).isEqualTo(1L);
@@ -99,4 +106,56 @@ public class PointServiceTest {
         assertThat(result.get(1).type()).isEqualTo(TransactionType.USE);
         assertThat(result.get(1).amount()).isEqualTo(200L);
     }
+
+    /**
+     * 작성 이유 : 고객이 최소 충전금액(1원) 미만으로 충전 시도 대비
+     */
+    @Test
+    @DisplayName("Red: 포인트 충전 실패")
+    void chargePoint_invalidPoint_returnFailChargePoint() {
+        //given
+        long id = 1L;
+        long nowAmount = 100L;
+        long chargeAmount = -100L;
+        long now = Instant.now().toEpochMilli();
+        TransactionType type = TransactionType.CHARGE;
+        UserPoint nowUserPoint = new UserPoint(id, nowAmount, now);
+        given(userPointRepository.selectById(id)).willReturn(nowUserPoint);
+
+        //when
+
+        //then
+        assertThatThrownBy(() -> pointService.chargeUserPoint(id, chargeAmount)).isInstanceOf(RuntimeException.class)
+          .hasMessage("최소 충전 금액은 " + PointPolicy.MINIMUM_CHARGE + "이상 입니다.");
+
+        then(pointHistoryRepository).shouldHaveNoInteractions();
+
+    }
+
+    /**
+     * 작성 이유 : 고객이 최소충전금액(1원) 이상 충전 시에 정상 충전 여부 검토
+     */
+    @Test
+    @DisplayName("Green: 포인트 충전 실패")
+    void chargePoint_validPoint_returnSuccessChargePoint() {
+        // given
+        long id = 1L;
+        long nowAmount = 100L;
+        long chargeAmount = 1L;
+        TransactionType type = TransactionType.CHARGE;
+
+        given(userPointRepository.selectById(id))
+                .willReturn(new UserPoint(id, nowAmount, Instant.parse("2025-11-24T00:00:00Z").toEpochMilli()));
+        given(userPointRepository.chargePointById(id, nowAmount + chargeAmount))
+                .willReturn(new UserPoint(id, nowAmount + chargeAmount, Instant.now().toEpochMilli()));
+
+        // when
+        UserPoint pointCharge = pointService.chargeUserPoint(id, chargeAmount);
+
+
+        // then
+        assertThat(pointCharge.point()).isEqualTo(101L);
+        then(pointHistoryRepository).should(times(1)).insertPointHistory(eq(id), eq(chargeAmount), eq(type), anyLong());
+    }
+
 }
