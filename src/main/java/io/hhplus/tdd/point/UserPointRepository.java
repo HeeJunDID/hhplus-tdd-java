@@ -13,7 +13,7 @@ public class UserPointRepository {
         return userPointTable.selectById(id);
     }
 
-    public UserPoint chargePointById(long id, long amount) {
+    public UserPoint useOrChargePointById(long id, long amount) {
         return userPointTable.insertOrUpdate(id, amount);
     }
 

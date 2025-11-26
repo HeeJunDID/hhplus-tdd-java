@@ -1,20 +1,13 @@
 package io.hhplus.tdd.pointTest;
 
-import io.hhplus.tdd.database.UserPointTable;
-import io.hhplus.tdd.point.PointService;
-import io.hhplus.tdd.point.PointServiceImpl;
 import io.hhplus.tdd.point.UserPoint;
 import io.hhplus.tdd.point.UserPointRepository;
-import org.apache.catalina.User;
-import org.assertj.core.api.Assertions;
+import io.hhplus.tdd.point.PointService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
@@ -26,7 +19,7 @@ import static org.mockito.BDDMockito.given;
 public class PointControllerTest {
 
     @InjectMocks
-    PointService pointService = new PointServiceImpl();
+    PointService pointService;
     @Mock
     UserPointRepository userPointRepository;
 
