@@ -1,5 +1,6 @@
 package io.hhplus.tdd.pointTest;
 
+import io.hhplus.tdd.exception.PointServiceException;
 import io.hhplus.tdd.point.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,9 +27,6 @@ public class PointServiceTest {
 
     @Mock
     PointHistoryRepository pointHistoryRepository;
-
-//    @InjectMocks
-//    PointHistoryService pointHistoryService;
 
     @InjectMocks
     PointService pointService;
@@ -131,14 +129,13 @@ public class PointServiceTest {
         long nowAmount = 100L;
         long chargeAmount = -100L;
         long now = Instant.now().toEpochMilli();
-        TransactionType type = TransactionType.CHARGE;
         UserPoint nowUserPoint = new UserPoint(id, nowAmount, now);
         given(userPointRepository.selectById(id)).willReturn(nowUserPoint);
 
         //when
 
         //then
-        assertThatThrownBy(() -> pointService.chargeUserPoint(id, chargeAmount)).isInstanceOf(RuntimeException.class)
+        assertThatThrownBy(() -> pointService.chargeUserPoint(id, chargeAmount)).isInstanceOf(PointServiceException.class)
           .hasMessage("최소 충전 금액은 " + PointPolicy.MINIMUM_CHARGE + "이상 입니다.");
 
         then(pointHistoryRepository).shouldHaveNoInteractions();
@@ -186,9 +183,9 @@ public class PointServiceTest {
 
         //then
         // 고객이 사용하려는 포인트가(100L) 가지고있는 포인트(99L)보다 클때
-        assertThatThrownBy(() -> {
-            pointService.useUserPoint(id, largeAmount);
-        }).isInstanceOf(RuntimeException.class).hasMessage("최소 사용 금액은 0원 이상입니다.");
+        assertThatThrownBy(() -> pointService.useUserPoint(id, largeAmount))
+                .isInstanceOf(PointServiceException.class)
+                .hasMessage("최소 사용 금액은 0원 이상입니다.");
 
         then(pointHistoryRepository).shouldHaveNoInteractions();
         then(userPointRepository).shouldHaveNoMoreInteractions();
@@ -210,9 +207,9 @@ public class PointServiceTest {
 
         //then
         // 고객이 사용하려는 포인트가(100L) 가지고있는 포인트(99L)보다 클때
-        assertThatThrownBy(() -> {
-            pointService.useUserPoint(id, largeAmount);
-        }).isInstanceOf(RuntimeException.class).hasMessage("사용하려는 포인트는 보유하고 있는 포인트보다 작아야 합니다.");
+        assertThatThrownBy(() -> pointService.useUserPoint(id, largeAmount))
+                .isInstanceOf(PointServiceException.class)
+                .hasMessage("사용하려는 포인트는 보유하고 있는 포인트보다 작아야 합니다.");
 
         then(pointHistoryRepository).shouldHaveNoInteractions();
         then(userPointRepository).shouldHaveNoMoreInteractions();

@@ -1,5 +1,6 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.exception.PointServiceException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +92,7 @@ public class PointService {
      */
     private void validChargePoint(long amount) {
         if (amount < PointPolicy.MINIMUM_CHARGE) {
-            throw new RuntimeException("최소 충전 금액은 " + PointPolicy.MINIMUM_CHARGE + "이상 입니다.");
+            throw new PointServiceException("최소 충전 금액은 " + PointPolicy.MINIMUM_CHARGE + "이상 입니다.");
         }
     }
 
@@ -101,7 +102,7 @@ public class PointService {
      */
     private void validUsePoint(long amount) {
         if (amount <= 0) {
-            throw new RuntimeException("최소 사용 금액은 0원 이상입니다.");
+            throw new PointServiceException("최소 사용 금액은 0원 이상입니다.");
         }
     }
 
@@ -112,7 +113,7 @@ public class PointService {
      */
     private void validUseUserPoint(UserPoint userPoint, long amount) {
         if (userPoint.point() < amount) {
-            throw new RuntimeException("사용하려는 포인트는 보유하고 있는 포인트보다 작아야 합니다.");
+            throw new PointServiceException("사용하려는 포인트는 보유하고 있는 포인트보다 작아야 합니다.");
         }
 
     }
